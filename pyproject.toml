@@ -10,12 +10,17 @@ dependencies = [
     "matplotlib>=3.11.2",
     "numpy>=2.5.4",
     "pandas>=3.1.0",
+    "scikit-learn>=1.7",
 ]
 
 [project.scripts]
 fetch-speeches = "data_mining_project.fetch_speeches:main"
 fetch-representatives = "data_mining_project.fetch_representatives:main"
 merge-speeches = "data_mining_project.merge_dataset:main"
+label-sides = "data_mining_project.labels:main"
+split-dataset = "data_mining_project.split_dataset:main"
+train-baseline = "data_mining_project.train_baseline:main"
+predict-side = "data_mining_project.predict:main"
 
 [build-system]
 requires = ["hatchling"]
