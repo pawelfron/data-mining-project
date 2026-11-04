@@ -15,7 +15,7 @@ from sklearn.metrics import classification_report, f1_score
 from sklearn.multiclass import OneVsRestClassifier
 from sklearn.pipeline import Pipeline
 
-from data_mining_project.client import configure_logging
+from data_mining_project.utils.client import configure_logging
 
 logger = logging.getLogger(__name__)
 

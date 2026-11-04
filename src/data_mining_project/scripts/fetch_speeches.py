@@ -10,8 +10,8 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 from typing import Any
 
-from data_mining_project.client import SejmClient, configure_logging
-from data_mining_project.html_text import html_to_text
+from data_mining_project.utils.client import SejmClient, configure_logging
+from data_mining_project.utils.html_text import html_to_text
 
 logger = logging.getLogger(__name__)
 

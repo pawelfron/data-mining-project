@@ -7,7 +7,7 @@ import csv
 import logging
 from pathlib import Path
 
-from data_mining_project.client import SejmClient, configure_logging
+from data_mining_project.utils.client import SejmClient, configure_logging
 
 logger = logging.getLogger(__name__)
 

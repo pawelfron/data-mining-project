@@ -9,7 +9,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-from data_mining_project.client import configure_logging
+from data_mining_project.utils.client import configure_logging
 
 logger = logging.getLogger(__name__)
 
