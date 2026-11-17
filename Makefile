@@ -1,7 +1,7 @@
 SEJM_TERM ?= 9
 WORKERS   ?= 4
 MAX_DAYS  ?=
-TEXT      ?= Panie Marszałku! Wysoka Izbo! Musimy obniżyć podatki dla przedsiębiorców i ograniczyć biurokrację.
+TEXT      ?= Musimy obniżyć podatki dla przedsiębiorców i ograniczyć biurokrację.
 
 .DEFAULT_GOAL := help
 .PHONY: help setup fetch prepare train predict notebook clean clean-all all
@@ -11,7 +11,7 @@ help:
 	@echo "  make setup                  1. Zainstaluj środowisko (uv sync)"
 	@echo "  make fetch                  2. Pobierz posłów i wypowiedzi z API (np. WORKERS=16 MAX_DAYS=3)"
 	@echo "  make prepare                3. Złącz, wyczyść, oznacz strony i podziel zbiór"
-	@echo "  make train                  4. Wytrenuj model (TF-IDF + Logistic Regression)"
+	@echo "  make train                  4. Wytrenuj model (HerBERT + Logistic Regression)"
 	@echo ""
 	@echo "Dodatkowe:"
 	@echo "  make all                    Wykonaj wszystko po kolei (setup -> fetch -> prepare -> train)"
@@ -43,7 +43,7 @@ notebook:
 	uv run jupyter notebook src/data_mining_project/notebooks/presentation.ipynb
 
 clean:
-	rm -rf models data/term$(SEJM_TERM)/splits
+	rm -rf models data/term$(SEJM_TERM)/splits data/term$(SEJM_TERM)/embeddings
 	rm -f data/term$(SEJM_TERM)/dataset.csv data/term$(SEJM_TERM)/dataset_clean.csv data/term$(SEJM_TERM)/dataset_labeled.csv
 
 clean-all:

@@ -8,6 +8,13 @@ from pathlib import Path
 
 import joblib
 
+from data_mining_project.utils.herbert import (
+    DEFAULT_MAX_LENGTH,
+    DEFAULT_MODEL_NAME,
+    encode_texts,
+    load_herbert,
+)
+
 SIDE_LABELS = {
     "left": "lewicowy",
     "center": "centrowy",
@@ -29,11 +36,21 @@ def main(argv: list[str] | None = None) -> None:
     if not text:
         raise SystemExit("Provide speech text as an argument or via stdin.")
 
+    tokenizer, encoder, device = load_herbert(args.encoder)
+    embedding = encode_texts(
+        [text],
+        tokenizer,
+        encoder,
+        device,
+        batch_size=1,
+        max_length=args.max_length,
+    )
+
     model = joblib.load(args.model)
-    side = str(model.predict([text])[0])
+    side = str(model.predict(embedding)[0])
     probs = None
     if hasattr(model, "predict_proba"):
-        probs = dict(zip(model.classes_, model.predict_proba([text])[0], strict=True))
+        probs = dict(zip(model.classes_, model.predict_proba(embedding)[0], strict=True))
 
     print(f"side: {side} ({SIDE_LABELS.get(side, side)})")
     if probs is not None:
@@ -55,8 +72,19 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--model",
         type=Path,
-        default=Path("models/side_tfidf.joblib"),
+        default=Path("models/side_model.joblib"),
         help="Path to trained side classifier",
+    )
+    parser.add_argument(
+        "--encoder",
+        default=DEFAULT_MODEL_NAME,
+        help="Hugging Face model id used to embed the text",
+    )
+    parser.add_argument(
+        "--max-length",
+        type=int,
+        default=DEFAULT_MAX_LENGTH,
+        help="Tokenizer max length (truncation)",
     )
     return parser
 
