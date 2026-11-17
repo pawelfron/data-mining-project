@@ -17,6 +17,7 @@ dependencies = [
 fetch-speeches = "data_mining_project.scripts.fetch_speeches:main"
 fetch-representatives = "data_mining_project.scripts.fetch_representatives:main"
 merge-speeches = "data_mining_project.scripts.merge_dataset:main"
+clean-speeches = "data_mining_project.scripts.clean_dataset:main"
 label-sides = "data_mining_project.scripts.labels:main"
 split-dataset = "data_mining_project.scripts.split_dataset:main"
 train-baseline = "data_mining_project.scripts.train_baseline:main"
