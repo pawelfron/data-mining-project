@@ -8,6 +8,8 @@ from pathlib import Path
 
 import joblib
 
+from data_mining_project.utils.sejm_text import clean_speech_text
+
 SIDE_LABELS = {
     "left": "lewicowy",
     "center": "centrowy",
@@ -22,10 +24,10 @@ def main(argv: list[str] | None = None) -> None:
             f"Missing model: {args.model}\nTrain first with: uv run train-baseline"
         )
 
-    text = args.text
-    if text is None:
-        text = sys.stdin.read()
-    text = text.strip()
+    raw_text = args.text
+    if raw_text is None:
+        raw_text = sys.stdin.read()
+    text = clean_speech_text(raw_text) or raw_text.strip()
     if not text:
         raise SystemExit("Provide speech text as an argument or via stdin.")
 

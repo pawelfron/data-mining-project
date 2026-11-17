@@ -1,4 +1,4 @@
-"""Filter out procedural/short speeches and MPs' oaths before labeling."""
+"""Clean speech texts and filter out procedural/short speeches and MPs' oaths."""
 
 from __future__ import annotations
 
@@ -10,6 +10,7 @@ from pathlib import Path
 
 from data_mining_project.scripts.merge_dataset import DATASET_COLUMNS
 from data_mining_project.utils.client import configure_logging
+from data_mining_project.utils.sejm_text import clean_speech_text
 
 logger = logging.getLogger(__name__)
 
@@ -39,18 +40,23 @@ def main(argv: list[str] | None = None) -> None:
         writer = csv.DictWriter(dst, fieldnames=DATASET_COLUMNS, lineterminator="\n")
         writer.writeheader()
         for row in reader:
-            text = row["text"]
-            if len(text) < args.min_chars:
-                dropped_short += 1
-                continue
-            if not args.keep_oaths and _OATH_PATTERN.search(text):
+            raw_text = row["text"]
+            if not args.keep_oaths and _OATH_PATTERN.search(raw_text):
                 dropped_oath += 1
                 continue
-            writer.writerow({column: row[column] for column in DATASET_COLUMNS})
+
+            cleaned_text = clean_speech_text(raw_text)
+            if len(cleaned_text) < args.min_chars:
+                dropped_short += 1
+                continue
+
+            out_row = {column: row[column] for column in DATASET_COLUMNS}
+            out_row["text"] = cleaned_text
+            writer.writerow(out_row)
             kept += 1
 
     logger.info(
-        "Wrote %s clean speeches to %s (dropped %s < %s chars, %s oaths)",
+        "Wrote %s clean speeches to %s (dropped %s < %s chars after cleaning, %s oaths)",
         kept,
         args.output,
         dropped_short,
@@ -61,7 +67,7 @@ def main(argv: list[str] | None = None) -> None:
 
 def _parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
-        description="Filter short speeches and oaths out of merged dataset.",
+        description="Clean Sejm speeches and filter short/oath statements.",
     )
     parser.add_argument(
         "--input",
@@ -73,13 +79,13 @@ def _parser() -> argparse.ArgumentParser:
         "--output",
         type=Path,
         default=Path("data/term9/dataset_clean.csv"),
-        help="Filtered CSV output path",
+        help="Cleaned CSV output path",
     )
     parser.add_argument(
         "--min-chars",
         type=int,
         default=300,
-        help="Minimum speech character length to keep (default: 300)",
+        help="Minimum cleaned speech character length to keep (default: 300)",
     )
     parser.add_argument(
         "--keep-oaths",

@@ -13,9 +13,10 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import classification_report, f1_score
 from sklearn.multiclass import OneVsRestClassifier
-from sklearn.pipeline import Pipeline
+from sklearn.pipeline import FeatureUnion, Pipeline
 
 from data_mining_project.utils.client import configure_logging
+from data_mining_project.utils.sejm_text import SEJM_STOP_WORDS
 
 logger = logging.getLogger(__name__)
 
@@ -73,14 +74,34 @@ def _build_pipeline() -> Pipeline:
     return Pipeline(
         steps=[
             (
-                "tfidf",
-                TfidfVectorizer(
-                    lowercase=True,
-                    ngram_range=(1, 2),
-                    min_df=3,
-                    max_df=0.9,
-                    max_features=100_000,
-                    sublinear_tf=True,
+                "features",
+                FeatureUnion(
+                    transformer_list=[
+                        (
+                            "word",
+                            TfidfVectorizer(
+                                lowercase=True,
+                                analyzer="word",
+                                ngram_range=(1, 2),
+                                min_df=3,
+                                max_df=0.9,
+                                max_features=80_000,
+                                sublinear_tf=True,
+                                stop_words=sorted(SEJM_STOP_WORDS),
+                            ),
+                        ),
+                        (
+                            "char",
+                            TfidfVectorizer(
+                                lowercase=True,
+                                analyzer="char_wb",
+                                ngram_range=(3, 5),
+                                min_df=3,
+                                max_features=40_000,
+                                sublinear_tf=True,
+                            ),
+                        ),
+                    ]
                 ),
             ),
             (

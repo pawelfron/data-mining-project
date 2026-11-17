@@ -1,7 +1,7 @@
 SEJM_TERM ?= 9
 WORKERS   ?= 4
 MAX_DAYS  ?=
-TEXT      ?= Panie Marszałku! Wysoka Izbo! Musimy obniżyć podatki dla przedsiębiorców i ograniczyć biurokrację.
+TEXT      ?= Musimy obniżyć podatki dla przedsiębiorców i ograniczyć biurokrację.
 
 .DEFAULT_GOAL := help
 .PHONY: help setup fetch prepare train predict notebook clean clean-all all
