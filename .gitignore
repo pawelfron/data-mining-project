@@ -7,4 +7,6 @@ __pycache__
 *.csv
 *.json
 *.joblib
+*.npy
 models/
+data/**/embeddings/
