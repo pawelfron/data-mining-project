@@ -1,4 +1,4 @@
-"""Split labeled speeches into train/val/test by member_id."""
+"""Split labeled speeches into train/val/test by speaker (member per term)."""
 
 from __future__ import annotations
 
@@ -28,52 +28,58 @@ def main(argv: list[str] | None = None) -> None:
     if missing:
         raise SystemExit(f"Input is missing columns: {', '.join(sorted(missing))}")
 
+    df = df.copy()
+    if "speaker_key" not in df.columns:
+        if "term" in df.columns:
+            df["speaker_key"] = df["term"].astype(str) + "_" + df["member_id"].astype(str)
+        else:
+            df["speaker_key"] = df["member_id"].astype(str)
+
     args.output_dir.mkdir(parents=True, exist_ok=True)
-    assignments = _assign_members(
+    assignments = _assign_speakers(
         df,
         train_ratio=args.train_ratio,
         val_ratio=args.val_ratio,
         seed=args.seed,
     )
-    df = df.copy()
-    df["split"] = df["member_id"].map(assignments)
+    df["split"] = df["speaker_key"].map(assignments)
 
     for name in SPLITS:
         part = df.loc[df["split"] == name].drop(columns=["split"])
         path = args.output_dir / f"{name}.csv"
         part.to_csv(path, index=False)
         logger.info(
-            "%s: %s speeches, %s members -> %s",
+            "%s: %s speeches, %s speakers -> %s",
             name,
             f"{len(part):,}",
-            part["member_id"].nunique(),
+            part["speaker_key"].nunique(),
             path,
         )
 
     _log_distribution(df)
 
 
-def _assign_members(
+def _assign_speakers(
     df: pd.DataFrame,
     *,
     train_ratio: float,
     val_ratio: float,
     seed: int,
-) -> dict[int, str]:
+) -> dict[str, str]:
     if train_ratio <= 0 or val_ratio < 0 or train_ratio + val_ratio >= 1:
         raise SystemExit("Need train_ratio > 0, val_ratio >= 0, and train+val < 1")
 
     rng = np.random.default_rng(seed)
-    members = (
-        df.groupby("member_id", as_index=False)
+    speakers = (
+        df.groupby("speaker_key", as_index=False)
         .agg(club=("club", _majority_label), side=("side", _majority_label))
-        .sort_values("member_id")
+        .sort_values("speaker_key")
     )
 
-    assignments: dict[int, str] = {}
+    assignments: dict[str, str] = {}
     # Stratify primarily by side so left/right/center stay balanced across splits.
-    for _, group in members.groupby("side", sort=True):
-        ids = group["member_id"].to_numpy(copy=True)
+    for _, group in speakers.groupby("side", sort=True):
+        ids = group["speaker_key"].to_numpy(copy=True)
         rng.shuffle(ids)
         n = len(ids)
         n_train = max(1, int(round(n * train_ratio))) if n > 2 else max(1, n - 1)
@@ -83,12 +89,12 @@ def _assign_members(
         train_ids = ids[:n_train]
         val_ids = ids[n_train : n_train + n_val]
         test_ids = ids[n_train + n_val :]
-        for member_id in train_ids:
-            assignments[int(member_id)] = "train"
-        for member_id in val_ids:
-            assignments[int(member_id)] = "val"
-        for member_id in test_ids:
-            assignments[int(member_id)] = "test"
+        for speaker_key in train_ids:
+            assignments[str(speaker_key)] = "train"
+        for speaker_key in val_ids:
+            assignments[str(speaker_key)] = "val"
+        for speaker_key in test_ids:
+            assignments[str(speaker_key)] = "test"
     return assignments
 
 
@@ -100,27 +106,33 @@ def _log_distribution(df: pd.DataFrame) -> None:
     for name in SPLITS:
         part = df.loc[df["split"] == name]
         side_counts = part["side"].value_counts().to_dict()
+        club_counts = part["club"].value_counts().head(8).to_dict()
         logger.info(
             "%s side distribution: %s",
             name,
             ", ".join(f"{key}={value}" for key, value in side_counts.items()),
         )
+        logger.info(
+            "%s top clubs: %s",
+            name,
+            ", ".join(f"{key}={value}" for key, value in club_counts.items()),
+        )
 
 
 def _parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
-        description="Create member-wise train/val/test splits for labeled speeches.",
+        description="Create speaker-wise train/val/test splits for labeled speeches.",
     )
     parser.add_argument(
         "--input",
         type=Path,
-        default=Path("data/term9/dataset_labeled.csv"),
+        default=Path("data/combined/dataset_labeled.csv"),
         help="Labeled speeches CSV",
     )
     parser.add_argument(
         "--output-dir",
         type=Path,
-        default=Path("data/term9/splits"),
+        default=Path("data/combined/splits"),
         help="Directory for train.csv / val.csv / test.csv",
     )
     parser.add_argument("--train-ratio", type=float, default=0.7)

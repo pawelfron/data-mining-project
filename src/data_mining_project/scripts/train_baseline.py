@@ -70,7 +70,6 @@ def _load_splits(splits_dir: Path) -> dict[str, pd.DataFrame]:
 
 
 def _build_pipeline() -> Pipeline:
-    # liblinear is much faster than saga on wide sparse TF-IDF matrices.
     return Pipeline(
         steps=[
             (
@@ -123,7 +122,7 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--splits-dir",
         type=Path,
-        default=Path("data/term9/splits"),
+        default=Path("data/combined/splits"),
         help="Directory with train.csv / val.csv / test.csv",
     )
     parser.add_argument(

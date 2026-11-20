@@ -21,7 +21,8 @@ def main(argv: list[str] | None = None) -> None:
     args = _parser().parse_args(argv)
     if not args.model.exists():
         raise SystemExit(
-            f"Missing model: {args.model}\nTrain first with: uv run train-baseline"
+            f"Missing model: {args.model}\nTrain first with: uv run train-baseline "
+            "or run notebooks/train_tfidf.ipynb"
         )
 
     raw_text = args.text
@@ -58,7 +59,7 @@ def _parser() -> argparse.ArgumentParser:
         "--model",
         type=Path,
         default=Path("models/side_tfidf.joblib"),
-        help="Path to trained side classifier",
+        help="Path to trained TF-IDF side classifier",
     )
     return parser
 

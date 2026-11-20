@@ -11,18 +11,28 @@ from data_mining_project.utils.client import configure_logging
 
 logger = logging.getLogger(__name__)
 
-# IX kadencja — mapowanie klubów na orientację.
-# niez. pomijamy przy trenowaniu side (brak jednoznacznej etykiety).
+# Club -> side for terms 9 and 10.
+# niez. is dropped for side training (no clear label).
 CLUB_TO_SIDE: dict[str, str] = {
+    # left
     "Lewica": "left",
-    "LD": "left",  # koło Senyszyn / Rozenek / Kwiatkowski
+    "LD": "left",  # term 9 circle
+    "Razem": "left",
+    # right
     "PiS": "right",
     "Konfederacja": "right",
+    "Konfederacja_KP": "right",
     "Kukiz15": "right",
-    "PS": "right",  # Polskie Sprawy
+    "PS": "right",  # Polskie Sprawy (term 9)
+    "RozwojPlus": "right",  # term 10 PiS-origin club
+    "Demokracja": "right",  # term 10 (Kukiz / Ardanowski circle)
+    # center
     "KO": "center",
-    "KP": "center",
+    "KP": "center",  # Koalicja Polska (term 9)
     "Polska2050": "center",
+    "Polska2050-TD": "center",
+    "PSL-TD": "center",
+    "Centrum": "center",
 }
 
 LABELED_COLUMNS = [
@@ -51,6 +61,8 @@ def main(argv: list[str] | None = None) -> None:
 
     kept = 0
     dropped_unknown = 0
+    unknown_clubs: dict[str, int] = {}
+    args.output.parent.mkdir(parents=True, exist_ok=True)
     with source.open(encoding="utf-8", newline="") as src, args.output.open(
         "w", encoding="utf-8", newline=""
     ) as dst:
@@ -58,9 +70,11 @@ def main(argv: list[str] | None = None) -> None:
         writer = csv.DictWriter(dst, fieldnames=LABELED_COLUMNS, lineterminator="\n")
         writer.writeheader()
         for row in reader:
-            side = side_for_club(row["club"])
+            club = row["club"]
+            side = side_for_club(club)
             if side is None:
                 dropped_unknown += 1
+                unknown_clubs[club] = unknown_clubs.get(club, 0) + 1
                 if args.keep_unknown:
                     row = {**row, "side": "unknown"}
                     writer.writerow({column: row.get(column, "") for column in LABELED_COLUMNS})
@@ -74,7 +88,7 @@ def main(argv: list[str] | None = None) -> None:
                     "statement_num": row["statement_num"],
                     "member_id": row["member_id"],
                     "speaker_name": row["speaker_name"],
-                    "club": row["club"],
+                    "club": club,
                     "side": side,
                     "text": row["text"],
                 }
@@ -87,6 +101,11 @@ def main(argv: list[str] | None = None) -> None:
         args.output,
         dropped_unknown,
     )
+    if unknown_clubs:
+        summary = ", ".join(
+            f"{club}={count}" for club, count in sorted(unknown_clubs.items(), key=lambda x: -x[1])
+        )
+        logger.info("Unmapped clubs: %s", summary)
 
 
 def _parser() -> argparse.ArgumentParser:

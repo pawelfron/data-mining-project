@@ -6,11 +6,16 @@ readme = "README.md"
 requires-python = ">=3.14"
 dependencies = [
     "httpx>=0.28",
+    "joblib>=1.6.0",
     "jupyter>=1.1.1",
     "matplotlib>=3.11.2",
     "numpy>=2.5.4",
     "pandas>=3.1.0",
     "scikit-learn>=1.7",
+    "sentencepiece>=0.2.3",
+    "tokenizers>=0.22",
+    "torch>=2.5.0",
+    "transformers>=4.45.0",
 ]
 
 [project.scripts]
@@ -19,9 +24,11 @@ fetch-representatives = "data_mining_project.scripts.fetch_representatives:main"
 merge-speeches = "data_mining_project.scripts.merge_dataset:main"
 clean-speeches = "data_mining_project.scripts.clean_dataset:main"
 label-sides = "data_mining_project.scripts.labels:main"
+combine-datasets = "data_mining_project.scripts.combine_datasets:main"
 split-dataset = "data_mining_project.scripts.split_dataset:main"
 train-baseline = "data_mining_project.scripts.train_baseline:main"
 predict-side = "data_mining_project.scripts.predict:main"
+predict-club = "data_mining_project.scripts.predict_club:main"
 
 [build-system]
 requires = ["hatchling"]
